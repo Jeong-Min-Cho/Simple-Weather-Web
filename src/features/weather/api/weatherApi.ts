@@ -129,6 +129,11 @@ interface NominatimResponse {
     county?: string;
     state?: string;
     country?: string;
+    borough?: string;
+    suburb?: string;
+    quarter?: string;
+    neighbourhood?: string;
+    city_district?: string;
   };
   display_name: string;
 }
@@ -144,6 +149,7 @@ export async function reverseGeocode(
       lon: lon.toString(),
       format: "json",
       "accept-language": "ko",
+      addressdetails: "1",
     });
 
     const url = `https://nominatim.openstreetmap.org/reverse?${params}`;
@@ -160,8 +166,35 @@ export async function reverseGeocode(
     const data: NominatimResponse = await response.json();
     const address = data.address;
 
-    // 도시/읍/면 이름 반환 (우선순위: city > town > village > county)
-    return address.city || address.town || address.village || address.county || address.state || "알 수 없는 위치";
+    // 전체 주소 조합: 도/시 + 시/군/구 + 동/읍/면
+    const parts: string[] = [];
+
+    // 1. 도/광역시/특별시
+    if (address.state) {
+      parts.push(address.state);
+    }
+
+    // 2. 시/군/구
+    const city = address.city || address.county || address.town;
+    if (city && city !== address.state) {
+      parts.push(city);
+    }
+
+    // 3. 구 (서울 같은 대도시)
+    if (address.borough || address.city_district) {
+      const district = address.borough || address.city_district;
+      if (district && !parts.includes(district)) {
+        parts.push(district);
+      }
+    }
+
+    // 4. 동/읍/면
+    const dong = address.quarter || address.neighbourhood || address.suburb || address.village;
+    if (dong && !parts.includes(dong)) {
+      parts.push(dong);
+    }
+
+    return parts.length > 0 ? parts.join(" ") : "알 수 없는 위치";
   } catch {
     return "알 수 없는 위치";
   }
