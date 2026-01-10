@@ -128,12 +128,15 @@ interface NominatimResponse {
     village?: string;
     county?: string;
     state?: string;
+    province?: string;
     country?: string;
     borough?: string;
     suburb?: string;
     quarter?: string;
     neighbourhood?: string;
     city_district?: string;
+    road?: string;
+    dong?: string;
   };
   display_name: string;
 }
@@ -166,18 +169,21 @@ export async function reverseGeocode(
     const data: NominatimResponse = await response.json();
     const address = data.address;
 
+    // 디버깅: Nominatim 응답 확인
+    console.log("Nominatim response:", JSON.stringify(address, null, 2));
+
     // 전체 주소 조합: 도/시 + 시/군/구 + 동/읍/면
     const parts: string[] = [];
 
-    // 1. 도/광역시/특별시
-    if (address.state) {
-      parts.push(address.state);
+    // 1. 도/광역시/특별시 (province 또는 state)
+    const province = address.province || address.state;
+    if (province) {
+      parts.push(province);
     }
 
     // 2. 시/군/구
-    const city = address.city || address.county || address.town;
-    if (city && city !== address.state) {
-      parts.push(city);
+    if (address.city) {
+      parts.push(address.city);
     }
 
     // 3. 구 (서울 같은 대도시)
@@ -188,8 +194,13 @@ export async function reverseGeocode(
       }
     }
 
-    // 4. 동/읍/면
-    const dong = address.quarter || address.neighbourhood || address.suburb || address.village;
+    // 4. 읍/면 (town)
+    if (address.town && !parts.includes(address.town)) {
+      parts.push(address.town);
+    }
+
+    // 5. 동/리 (village, suburb, neighbourhood 등)
+    const dong = address.dong || address.quarter || address.neighbourhood || address.suburb || address.village;
     if (dong && !parts.includes(dong)) {
       parts.push(dong);
     }

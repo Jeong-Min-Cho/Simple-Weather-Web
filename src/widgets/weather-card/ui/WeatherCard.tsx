@@ -19,14 +19,7 @@ export function WeatherCard({ data, showDetails = true }: WeatherCardProps) {
     <Card className="w-full">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between">
-          <span className="text-lg font-medium">
-            {data.location}
-            {data.country && (
-              <span className="text-sm text-[var(--muted-foreground)] ml-1">
-                {data.country}
-              </span>
-            )}
-          </span>
+          <span className="text-lg font-medium">{data.location}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>
