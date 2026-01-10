@@ -87,8 +87,12 @@ export async function getCurrentWeather(
   lon: number,
   locationName?: string
 ): Promise<WeatherData> {
-  const data = await getWeatherData(lat, lon);
-  return transformCurrentWeather(data, locationName);
+  // 위치명이 없으면 reverse geocoding으로 조회
+  const [data, resolvedLocationName] = await Promise.all([
+    getWeatherData(lat, lon),
+    locationName ? Promise.resolve(locationName) : reverseGeocode(lat, lon),
+  ]);
+  return transformCurrentWeather(data, resolvedLocationName);
 }
 
 // 시간대별 예보 조회 (Transformed)
@@ -116,17 +120,51 @@ export async function geocodeLocation(
   return response.results || [];
 }
 
-// 좌표 → 지역명 변환 (Reverse Geocoding) - Open-Meteo는 reverse geocoding을 지원하지 않음
-// 대신 위도/경도로 검색하거나 별도 서비스 사용 필요
+// Nominatim Reverse Geocoding Response
+interface NominatimResponse {
+  address: {
+    city?: string;
+    town?: string;
+    village?: string;
+    county?: string;
+    state?: string;
+    country?: string;
+  };
+  display_name: string;
+}
+
+// 좌표 → 지역명 변환 (Reverse Geocoding) - Nominatim (OpenStreetMap) 사용
 export async function reverseGeocode(
   lat: number,
   lon: number
-): Promise<GeocodingResult[]> {
-  // Open-Meteo는 reverse geocoding을 지원하지 않으므로
-  // 좌표 기반으로 가장 가까운 도시를 찾는 방식 사용
-  // 일단 빈 배열 반환 (추후 다른 서비스로 대체 가능)
-  console.warn("Open-Meteo does not support reverse geocoding. Location name may not be available.");
-  return [];
+): Promise<string> {
+  try {
+    const params = new URLSearchParams({
+      lat: lat.toString(),
+      lon: lon.toString(),
+      format: "json",
+      "accept-language": "ko",
+    });
+
+    const url = `https://nominatim.openstreetmap.org/reverse?${params}`;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "SimpleWeatherApp/1.0",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Reverse geocoding failed");
+    }
+
+    const data: NominatimResponse = await response.json();
+    const address = data.address;
+
+    // 도시/읍/면 이름 반환 (우선순위: city > town > village > county)
+    return address.city || address.town || address.village || address.county || address.state || "알 수 없는 위치";
+  } catch {
+    return "알 수 없는 위치";
+  }
 }
 
 // Transform 함수들

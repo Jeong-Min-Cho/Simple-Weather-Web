@@ -51,7 +51,7 @@ export function useGeocode(query: string) {
 
 // 좌표 → 지역명 (Reverse Geocoding)
 export function useReverseGeocode(lat: number | null, lon: number | null) {
-  return useQuery<GeocodingResult[]>({
+  return useQuery<string>({
     queryKey: weatherKeys.reverseGeocode(lat ?? 0, lon ?? 0),
     queryFn: () => reverseGeocode(lat!, lon!),
     enabled: lat !== null && lon !== null,
