@@ -19,6 +19,7 @@ interface FavoritesActions {
   addFavorite: (location: Omit<FavoriteLocation, "id">) => boolean;
   removeFavorite: (id: string) => void;
   updateAlias: (id: string, name: string) => void;
+  reorderFavorites: (activeId: string, overId: string) => void;
   isFavorite: (latitude: number, longitude: number) => boolean;
   getFavoriteByCoords: (latitude: number, longitude: number) => FavoriteLocation | undefined;
 }
@@ -65,6 +66,20 @@ export const useFavoritesStore = create<FavoritesState & FavoritesActions>()(
             f.id === id ? { ...f, name } : f
           ),
         });
+      },
+
+      reorderFavorites: (activeId, overId) => {
+        const { favorites } = get();
+        const oldIndex = favorites.findIndex((f) => f.id === activeId);
+        const newIndex = favorites.findIndex((f) => f.id === overId);
+
+        if (oldIndex === -1 || newIndex === -1) return;
+
+        const newFavorites = [...favorites];
+        const [removed] = newFavorites.splice(oldIndex, 1);
+        newFavorites.splice(newIndex, 0, removed);
+
+        set({ favorites: newFavorites });
       },
 
       isFavorite: (latitude, longitude) => {

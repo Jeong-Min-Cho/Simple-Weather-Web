@@ -1,14 +1,39 @@
 "use client";
 
 import { useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
 import { useFavoritesStore, type FavoriteLocation } from "@/shared/model/favoritesStore";
-import { FavoriteCard } from "./FavoriteCard";
+import { SortableFavoriteCard } from "./SortableFavoriteCard";
 import { AliasEditModal } from "./AliasEditModal";
 import { Star } from "lucide-react";
 
 export function FavoriteGrid() {
-  const { favorites, removeFavorite, updateAlias } = useFavoritesStore();
+  const { favorites, removeFavorite, updateAlias, reorderFavorites } = useFavoritesStore();
   const [editingFavorite, setEditingFavorite] = useState<FavoriteLocation | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleEdit = (favorite: FavoriteLocation) => {
     setEditingFavorite(favorite);
@@ -23,6 +48,14 @@ export function FavoriteGrid() {
     setEditingFavorite(null);
   };
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      reorderFavorites(active.id as string, over.id as string);
+    }
+  };
+
   if (favorites.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-[var(--muted-foreground)]">
@@ -35,16 +68,24 @@ export function FavoriteGrid() {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        {favorites.map((favorite) => (
-          <FavoriteCard
-            key={favorite.id}
-            favorite={favorite}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ))}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={favorites.map((f) => f.id)} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {favorites.map((favorite) => (
+              <SortableFavoriteCard
+                key={favorite.id}
+                favorite={favorite}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       <AliasEditModal
         favorite={editingFavorite}
