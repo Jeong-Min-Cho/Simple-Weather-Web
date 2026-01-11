@@ -77,16 +77,16 @@ export function SortableFavoriteCard({ favorite, onEdit, onDelete }: SortableFav
         <Card className="w-full">
           <CardContent className="p-4">
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-4 w-4" />
-                <Skeleton className="h-5 w-16" />
-              </div>
-              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-3 w-14" />
               <div className="flex items-center gap-2 mt-1">
                 <Skeleton className="h-8 w-8 rounded-full" />
                 <Skeleton className="h-8 w-14" />
               </div>
               <Skeleton className="h-4 w-20" />
+              <div className="flex justify-center mt-2 pt-2 border-t border-[var(--border)]">
+                <Skeleton className="h-4 w-4" />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -102,24 +102,15 @@ export function SortableFavoriteCard({ favorite, onEdit, onDelete }: SortableFav
     <div ref={setNodeRef} style={style}>
       <Card className="w-full cursor-pointer hover:bg-[var(--accent)] transition-colors group">
         <CardContent className="p-4">
+          {/* 이름 영역 */}
           <div className="flex justify-between items-start mb-2">
-            <div className="flex items-center gap-1 flex-1 min-w-0">
-              <button
-                {...attributes}
-                {...listeners}
-                className="p-0.5 cursor-grab active:cursor-grabbing touch-none"
-                title="드래그하여 순서 변경"
-              >
-                <GripVertical className="w-4 h-4 text-[var(--muted-foreground)]" />
-              </button>
-              <Link href={`/weather/${favorite.id}`} className="flex-1 min-w-0">
-                <h3 className="font-medium text-sm truncate">{main}</h3>
-                {sub && (
-                  <p className="text-xs text-[var(--muted-foreground)] truncate">{sub}</p>
-                )}
-              </Link>
-            </div>
-            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Link href={`/weather/${favorite.id}`} className="flex-1 min-w-0 pr-2">
+              <h3 className="font-semibold text-base leading-tight">{main}</h3>
+              {sub && (
+                <p className="text-xs text-[var(--muted-foreground)]">{sub}</p>
+              )}
+            </Link>
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
               <button
                 onClick={handleEdit}
                 className="p-1 hover:bg-[var(--background)] rounded"
@@ -137,6 +128,7 @@ export function SortableFavoriteCard({ favorite, onEdit, onDelete }: SortableFav
             </div>
           </div>
 
+          {/* 날씨 정보 */}
           <Link href={`/weather/${favorite.id}`}>
             <div className="flex items-center gap-2">
               <WeatherIcon icon={weather.icon} condition={weather.condition} size="md" />
@@ -147,6 +139,16 @@ export function SortableFavoriteCard({ favorite, onEdit, onDelete }: SortableFav
               <TemperatureRange min={weather.tempMin} max={weather.tempMax} />
             </div>
           </Link>
+
+          {/* 드래그 핸들 */}
+          <div
+            {...attributes}
+            {...listeners}
+            className="flex justify-center mt-2 pt-2 border-t border-[var(--border)] cursor-grab active:cursor-grabbing touch-none opacity-50 hover:opacity-100 transition-opacity"
+            title="드래그하여 순서 변경"
+          >
+            <GripVertical className="w-4 h-4 text-[var(--muted-foreground)]" />
+          </div>
         </CardContent>
       </Card>
     </div>
