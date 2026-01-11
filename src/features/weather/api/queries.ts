@@ -19,7 +19,7 @@ export const weatherKeys = {
 // 현재 날씨 조회
 export function useCurrentWeather(lat: number | null, lon: number | null, locationName?: string) {
   return useQuery<WeatherData>({
-    queryKey: weatherKeys.current(lat ?? 0, lon ?? 0),
+    queryKey: [...weatherKeys.current(lat ?? 0, lon ?? 0), "v3"],
     queryFn: () => getCurrentWeather(lat!, lon!, locationName),
     enabled: lat !== null && lon !== null,
     staleTime: 5 * 60 * 1000, // 5분
@@ -51,7 +51,7 @@ export function useGeocode(query: string) {
 
 // 좌표 → 지역명 (Reverse Geocoding)
 export function useReverseGeocode(lat: number | null, lon: number | null) {
-  return useQuery<GeocodingResult[]>({
+  return useQuery<string>({
     queryKey: weatherKeys.reverseGeocode(lat ?? 0, lon ?? 0),
     queryFn: () => reverseGeocode(lat!, lon!),
     enabled: lat !== null && lon !== null,

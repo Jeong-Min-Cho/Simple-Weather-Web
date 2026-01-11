@@ -87,8 +87,12 @@ export async function getCurrentWeather(
   lon: number,
   locationName?: string
 ): Promise<WeatherData> {
-  const data = await getWeatherData(lat, lon);
-  return transformCurrentWeather(data, locationName);
+  // 위치명이 없으면 reverse geocoding으로 조회
+  const [data, resolvedLocationName] = await Promise.all([
+    getWeatherData(lat, lon),
+    locationName ? Promise.resolve(locationName) : reverseGeocode(lat, lon),
+  ]);
+  return transformCurrentWeather(data, resolvedLocationName);
 }
 
 // 시간대별 예보 조회 (Transformed)
@@ -116,17 +120,95 @@ export async function geocodeLocation(
   return response.results || [];
 }
 
-// 좌표 → 지역명 변환 (Reverse Geocoding) - Open-Meteo는 reverse geocoding을 지원하지 않음
-// 대신 위도/경도로 검색하거나 별도 서비스 사용 필요
+// Nominatim Reverse Geocoding Response
+interface NominatimResponse {
+  address: {
+    city?: string;
+    town?: string;
+    village?: string;
+    county?: string;
+    state?: string;
+    province?: string;
+    country?: string;
+    borough?: string;
+    suburb?: string;
+    quarter?: string;
+    neighbourhood?: string;
+    city_district?: string;
+    road?: string;
+    dong?: string;
+  };
+  display_name: string;
+}
+
+// 좌표 → 지역명 변환 (Reverse Geocoding) - Nominatim (OpenStreetMap) 사용
 export async function reverseGeocode(
   lat: number,
   lon: number
-): Promise<GeocodingResult[]> {
-  // Open-Meteo는 reverse geocoding을 지원하지 않으므로
-  // 좌표 기반으로 가장 가까운 도시를 찾는 방식 사용
-  // 일단 빈 배열 반환 (추후 다른 서비스로 대체 가능)
-  console.warn("Open-Meteo does not support reverse geocoding. Location name may not be available.");
-  return [];
+): Promise<string> {
+  try {
+    const params = new URLSearchParams({
+      lat: lat.toString(),
+      lon: lon.toString(),
+      format: "json",
+      "accept-language": "ko",
+      addressdetails: "1",
+    });
+
+    const url = `https://nominatim.openstreetmap.org/reverse?${params}`;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "SimpleWeatherApp/1.0",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Reverse geocoding failed");
+    }
+
+    const data: NominatimResponse = await response.json();
+    const address = data.address;
+
+    // 디버깅: Nominatim 응답 확인
+    console.log("Nominatim response:", JSON.stringify(address, null, 2));
+
+    // 전체 주소 조합: 도/시 + 시/군/구 + 동/읍/면
+    const parts: string[] = [];
+
+    // 1. 도/광역시/특별시 (province 또는 state)
+    const province = address.province || address.state;
+    if (province) {
+      parts.push(province);
+    }
+
+    // 2. 시/군/구
+    if (address.city) {
+      parts.push(address.city);
+    }
+
+    // 3. 구 (서울 같은 대도시)
+    if (address.borough || address.city_district) {
+      const district = address.borough || address.city_district;
+      if (district && !parts.includes(district)) {
+        parts.push(district);
+      }
+    }
+
+    // 4. 읍/면 (town)
+    if (address.town && !parts.includes(address.town)) {
+      parts.push(address.town);
+    }
+
+    // 5. 동/리 (village, suburb, neighbourhood 등)
+    const dong = address.dong || address.quarter || address.neighbourhood || address.suburb || address.village;
+    if (dong && !parts.includes(dong)) {
+      parts.push(dong);
+    }
+
+    return parts.length > 0 ? parts.join(" ") : "알 수 없는 위치";
+  } catch {
+    return "알 수 없는 위치";
+  }
 }
 
 // Transform 함수들
