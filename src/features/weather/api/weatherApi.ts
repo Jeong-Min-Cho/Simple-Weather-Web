@@ -1,6 +1,5 @@
 import type {
   OpenMeteoResponse,
-  GeocodingResponse,
   GeocodingResult,
   WeatherData,
   HourlyForecast,
@@ -8,7 +7,6 @@ import type {
 } from "../model/types";
 
 const BASE_URL = "https://api.open-meteo.com/v1";
-const GEO_URL = "https://geocoding-api.open-meteo.com/v1";
 
 // WMO Weather Code Mapping
 // https://open-meteo.com/en/docs
@@ -104,20 +102,65 @@ export async function getHourlyForecast(
   return transformHourlyForecast(data);
 }
 
-// 지역명 검색 (Geocoding)
+// Nominatim Forward Geocoding Response
+interface NominatimSearchResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+  name: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    county?: string;
+    state?: string;
+    province?: string;
+    country?: string;
+  };
+}
+
+// 지역명 검색 (Geocoding) - Nominatim 사용 (한국 지역 검색에 더 적합)
 export async function geocodeLocation(
   locationName: string
 ): Promise<GeocodingResult[]> {
-  const params = new URLSearchParams({
-    name: locationName,
-    count: "5",
-    language: "ko",
-    format: "json",
-  });
+  try {
+    const params = new URLSearchParams({
+      q: locationName,
+      format: "json",
+      "accept-language": "ko",
+      countrycodes: "kr",
+      limit: "5",
+    });
 
-  const url = `${GEO_URL}/search?${params}`;
-  const response = await fetchApi<GeocodingResponse>(url);
-  return response.results || [];
+    const url = `https://nominatim.openstreetmap.org/search?${params}`;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "SimpleWeatherApp/1.0",
+      },
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data: NominatimSearchResult[] = await response.json();
+
+    // Nominatim 결과를 GeocodingResult 형식으로 변환
+    return data.map((item, index) => ({
+      id: index,
+      name: item.name || item.display_name.split(",")[0],
+      latitude: parseFloat(item.lat),
+      longitude: parseFloat(item.lon),
+      feature_code: "PPL",
+      country_code: "KR",
+      country: "South Korea",
+      country_id: 1835841,
+      timezone: "Asia/Seoul",
+      admin1: item.address?.province || item.address?.state || "",
+    }));
+  } catch {
+    return [];
+  }
 }
 
 // Nominatim Reverse Geocoding Response
