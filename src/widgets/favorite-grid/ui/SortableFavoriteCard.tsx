@@ -76,17 +76,18 @@ export function SortableFavoriteCard({ favorite, onEdit, onDelete }: SortableFav
       <div ref={setNodeRef} style={style}>
         <Card className="w-full">
           <CardContent className="p-4">
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-5 w-20" />
-              <Skeleton className="h-3 w-14" />
-              <div className="flex items-center gap-2 mt-1">
-                <Skeleton className="h-8 w-8 rounded-full" />
-                <Skeleton className="h-8 w-14" />
-              </div>
-              <Skeleton className="h-4 w-20" />
-              <div className="flex justify-center mt-2 pt-2 border-t border-[var(--border)]">
-                <Skeleton className="h-4 w-4" />
-              </div>
+            {/* 이름 영역 - 높이 고정 */}
+            <div className="h-10 mb-2">
+              <Skeleton className="h-5 w-20 mb-1" />
+              <Skeleton className="h-4 w-14" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-8 w-14" />
+            </div>
+            <Skeleton className="h-4 w-20 mt-1" />
+            <div className="flex justify-center mt-2 pt-2 border-t border-[var(--border)]">
+              <Skeleton className="h-4 w-4" />
             </div>
           </CardContent>
         </Card>
@@ -102,13 +103,11 @@ export function SortableFavoriteCard({ favorite, onEdit, onDelete }: SortableFav
     <div ref={setNodeRef} style={style}>
       <Card className="w-full cursor-pointer hover:bg-[var(--accent)] transition-colors group">
         <CardContent className="p-4">
-          {/* 이름 영역 */}
-          <div className="flex justify-between items-start mb-2">
+          {/* 이름 영역 - 높이 고정 */}
+          <div className="flex justify-between items-start mb-2 h-10">
             <Link href={`/weather/${favorite.id}`} className="flex-1 min-w-0 pr-2">
               <h3 className="font-semibold text-base leading-tight">{main}</h3>
-              {sub && (
-                <p className="text-xs text-[var(--muted-foreground)]">{sub}</p>
-              )}
+              <p className="text-xs text-[var(--muted-foreground)] h-4">{sub || "\u00A0"}</p>
             </Link>
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
               <button
