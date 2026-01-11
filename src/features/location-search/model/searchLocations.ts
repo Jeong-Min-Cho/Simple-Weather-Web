@@ -55,11 +55,39 @@ export function searchLocations(query: string, limit: number = 10): LocationResu
   return results.slice(0, limit);
 }
 
-// 검색어로 가장 적합한 지역 찾기 (geocoding용)
-export function getLocationForGeocode(location: LocationResult): string {
-  // 시/군/구 레벨까지만 사용 (동 레벨은 geocoding에서 잘 안됨)
-  if (location.parts.length >= 2) {
-    return location.parts.slice(0, 2).join(" ");
+// Geocoding 쿼리 후보 생성 (우선순위대로)
+export function getGeocodingQueries(location: LocationResult): string[] {
+  const parts = location.parts;
+  const queries: string[] = [];
+
+  // 시/도 이름 정규화
+  const normalizeCity = (name: string) =>
+    name.replace(/(특별시|광역시|특별자치시|특별자치도|도)$/, "");
+
+  if (parts.length >= 3) {
+    // 3단계 (시-구-동): 여러 조합 시도
+    const city = normalizeCity(parts[0]);
+    queries.push(`${parts[2]}, ${parts[1]}, ${city}`); // 동, 구, 시
+    queries.push(`${parts[1]}, ${city}`); // 구, 시
+    queries.push(parts[1]); // 구만
+    queries.push(city); // 시만
+  } else if (parts.length === 2) {
+    // 2단계 (시-구)
+    const city = normalizeCity(parts[0]);
+    queries.push(`${parts[1]}, ${city}`);
+    queries.push(parts[1]);
+    queries.push(city);
+  } else {
+    // 1단계 (시/도만)
+    queries.push(normalizeCity(parts[0]));
+    queries.push(parts[0]);
   }
-  return location.parts[0];
+
+  return queries;
+}
+
+// 첫 번째 쿼리 반환 (하위 호환성)
+export function getLocationForGeocode(location: LocationResult): string {
+  const queries = getGeocodingQueries(location);
+  return queries[0] || location.name;
 }
