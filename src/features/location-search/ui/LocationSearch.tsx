@@ -68,6 +68,9 @@ export function LocationSearch({
           e.preventDefault();
           if (selectedIndex >= 0 && results[selectedIndex]) {
             handleSelect(results[selectedIndex]);
+          } else if (results.length > 0) {
+            // 선택된 항목이 없으면 첫 번째 결과 선택
+            handleSelect(results[0]);
           }
           break;
         case "Escape":
