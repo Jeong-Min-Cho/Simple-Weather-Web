@@ -55,31 +55,24 @@ export function searchLocations(query: string, limit: number = 10): LocationResu
   return results.slice(0, limit);
 }
 
-// Geocoding 쿼리 후보 생성 (우선순위대로)
+// Geocoding 쿼리 후보 생성 (우선순위대로) - Nominatim 형식
 export function getGeocodingQueries(location: LocationResult): string[] {
   const parts = location.parts;
   const queries: string[] = [];
 
-  // 시/도 이름 정규화
-  const normalizeCity = (name: string) =>
-    name.replace(/(특별시|광역시|특별자치시|특별자치도|도)$/, "");
-
   if (parts.length >= 3) {
-    // 3단계 (시-구-동): 여러 조합 시도
-    const city = normalizeCity(parts[0]);
-    queries.push(`${parts[2]}, ${parts[1]}, ${city}`); // 동, 구, 시
-    queries.push(`${parts[1]}, ${city}`); // 구, 시
-    queries.push(parts[1]); // 구만
-    queries.push(city); // 시만
+    // 3단계 (도-시-동): Nominatim은 전체 주소 형식을 선호
+    queries.push(parts.join(" ")); // "전라남도 여수시 관문동"
+    queries.push(`${parts[1]} ${parts[2]}`); // "여수시 관문동"
+    queries.push(parts[1]); // "여수시"
+    queries.push(parts[0]); // "전라남도"
   } else if (parts.length === 2) {
-    // 2단계 (시-구)
-    const city = normalizeCity(parts[0]);
-    queries.push(`${parts[1]}, ${city}`);
-    queries.push(parts[1]);
-    queries.push(city);
+    // 2단계 (도-시)
+    queries.push(parts.join(" ")); // "전라남도 여수시"
+    queries.push(parts[1]); // "여수시"
+    queries.push(parts[0]); // "전라남도"
   } else {
     // 1단계 (시/도만)
-    queries.push(normalizeCity(parts[0]));
     queries.push(parts[0]);
   }
 
