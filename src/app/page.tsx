@@ -8,6 +8,7 @@ import { useGeolocation } from "@/shared/hooks";
 import { LocationSearch, type LocationResult, getGeocodingQueries } from "@/features/location-search";
 import { MapPin, MapPinOff, Loader2, Navigation, AlertCircle } from "lucide-react";
 import { Button } from "@/shared/ui";
+import { FavoriteGrid } from "@/widgets/favorite-grid";
 
 interface SelectedLocation {
   name: string;
@@ -218,8 +219,16 @@ export default function Home() {
         )}
 
         {/* 날씨 정보 */}
-        {!isSearching && weather && <WeatherCard data={weather} />}
+        {!isSearching && weather && currentLat && currentLon && (
+          <WeatherCard data={weather} latitude={currentLat} longitude={currentLon} />
+        )}
         {!isSearching && hourly && <HourlyForecast data={hourly} />}
+
+        {/* 즐겨찾기 */}
+        <div className="mt-4 w-full">
+          <h2 className="text-lg font-semibold mb-3">즐겨찾기</h2>
+          <FavoriteGrid />
+        </div>
       </div>
     </main>
   );

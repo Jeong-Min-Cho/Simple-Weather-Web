@@ -7,19 +7,59 @@ import {
   TemperatureRange,
 } from "@/entities/weather/ui/TemperatureDisplay";
 import type { WeatherData } from "@/features/weather/model/types";
-import { Droplets, Wind } from "lucide-react";
+import { Droplets, Wind, Star } from "lucide-react";
+import { useFavoritesStore } from "@/shared/model/favoritesStore";
 
 interface WeatherCardProps {
   data: WeatherData;
+  latitude?: number;
+  longitude?: number;
   showDetails?: boolean;
 }
 
-export function WeatherCard({ data, showDetails = true }: WeatherCardProps) {
+export function WeatherCard({ data, latitude, longitude, showDetails = true }: WeatherCardProps) {
+  const { addFavorite, removeFavorite, isFavorite, getFavoriteByCoords } = useFavoritesStore();
+
+  const canFavorite = latitude !== undefined && longitude !== undefined;
+  const isFav = canFavorite && isFavorite(latitude, longitude);
+
+  const handleToggleFavorite = () => {
+    if (!canFavorite) return;
+
+    if (isFav) {
+      const fav = getFavoriteByCoords(latitude, longitude);
+      if (fav) {
+        removeFavorite(fav.id);
+      }
+    } else {
+      const success = addFavorite({
+        name: data.location,
+        originalName: data.location,
+        latitude,
+        longitude,
+      });
+      if (!success) {
+        alert("즐겨찾기는 최대 6개까지 추가할 수 있습니다.");
+      }
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center justify-between">
           <span className="text-lg font-medium">{data.location}</span>
+          {canFavorite && (
+            <button
+              onClick={handleToggleFavorite}
+              className="p-1 hover:bg-[var(--accent)] rounded transition-colors"
+              title={isFav ? "즐겨찾기 해제" : "즐겨찾기 추가"}
+            >
+              <Star
+                className={`w-5 h-5 ${isFav ? "fill-yellow-400 text-yellow-400" : "text-[var(--muted-foreground)]"}`}
+              />
+            </button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
