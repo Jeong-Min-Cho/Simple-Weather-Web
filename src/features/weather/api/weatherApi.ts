@@ -298,7 +298,7 @@ function transformHourlyForecast(data: OpenMeteoResponse): HourlyForecast[] {
   const now = new Date();
   const currentHour = now.getHours();
 
-  // 현재 시간부터 24시간 (8개 * 3시간 간격처럼 보이도록 3시간 간격으로)
+  // 현재 시간부터 24시간 (1시간 간격으로 24개)
   const forecasts: HourlyForecast[] = [];
   let startIndex = hourly.time.findIndex((time) => {
     const hour = new Date(time).getHours();
@@ -307,9 +307,9 @@ function transformHourlyForecast(data: OpenMeteoResponse): HourlyForecast[] {
 
   if (startIndex === -1) startIndex = 0;
 
-  // 3시간 간격으로 8개
-  for (let i = 0; i < 8; i++) {
-    const index = startIndex + i * 3;
+  // 1시간 간격으로 24개
+  for (let i = 0; i < 24; i++) {
+    const index = startIndex + i;
     if (index >= hourly.time.length) break;
 
     const time = hourly.time[index];
