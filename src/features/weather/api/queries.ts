@@ -24,6 +24,7 @@ export function useCurrentWeather(lat: number | null, lon: number | null, locati
     enabled: lat !== null && lon !== null,
     staleTime: 5 * 60 * 1000, // 5분
     gcTime: 10 * 60 * 1000, // 10분
+    refetchInterval: 60 * 60 * 1000, // 1시간마다 자동 갱신
   });
 }
 
@@ -35,6 +36,7 @@ export function useHourlyForecast(lat: number | null, lon: number | null) {
     enabled: lat !== null && lon !== null,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    refetchInterval: 60 * 60 * 1000, // 1시간마다 자동 갱신
   });
 }
 
