@@ -18,11 +18,13 @@ import {
 import { useFavoritesStore, type FavoriteLocation } from "@/shared/model/favoritesStore";
 import { SortableFavoriteCard } from "./SortableFavoriteCard";
 import { AliasEditModal } from "./AliasEditModal";
+import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { Star } from "lucide-react";
 
 export function FavoriteGrid() {
   const { favorites, removeFavorite, updateAlias, reorderFavorites } = useFavoritesStore();
   const [editingFavorite, setEditingFavorite] = useState<FavoriteLocation | null>(null);
+  const [deletingFavorite, setDeletingFavorite] = useState<FavoriteLocation | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -39,7 +41,14 @@ export function FavoriteGrid() {
     setEditingFavorite(favorite);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    const favorite = favorites.find((f) => f.id === id);
+    if (favorite) {
+      setDeletingFavorite(favorite);
+    }
+  };
+
+  const handleDeleteConfirm = (id: string) => {
     removeFavorite(id);
   };
 
@@ -80,7 +89,7 @@ export function FavoriteGrid() {
                 key={favorite.id}
                 favorite={favorite}
                 onEdit={handleEdit}
-                onDelete={handleDelete}
+                onDelete={handleDeleteClick}
               />
             ))}
           </div>
@@ -91,6 +100,12 @@ export function FavoriteGrid() {
         favorite={editingFavorite}
         onClose={() => setEditingFavorite(null)}
         onSave={handleSaveAlias}
+      />
+
+      <DeleteConfirmModal
+        favorite={deletingFavorite}
+        onClose={() => setDeletingFavorite(null)}
+        onConfirm={handleDeleteConfirm}
       />
     </>
   );

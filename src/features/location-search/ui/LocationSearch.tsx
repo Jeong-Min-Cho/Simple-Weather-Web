@@ -126,7 +126,7 @@ export function LocationSearch({
 
       {/* 검색 결과 드롭다운 */}
       {isOpen && results.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-[var(--card)] border border-[var(--border)] rounded-md shadow-lg max-h-64 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-[var(--card)] border border-[var(--border)] rounded-md shadow-lg max-h-64 overflow-y-auto scrollbar-thin">
           {results.map((location, index) => (
             <button
               key={location.id}
