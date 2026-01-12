@@ -344,9 +344,6 @@ function isDaytime(sunrise: string, sunset: string, now?: Date): boolean {
 }
 
 function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString("ko-KR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  const hour = new Date(timestamp).getHours();
+  return `${hour}시`;
 }
