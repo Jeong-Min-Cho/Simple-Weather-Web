@@ -7,7 +7,7 @@ import { useCurrentWeather, useHourlyForecast, useGeocode } from "@/features/wea
 import { useGeolocation } from "@/shared/hooks";
 import { LocationSearch, type LocationResult, getGeocodingQueries } from "@/features/location-search";
 import { MapPin, MapPinOff, Loader2, Navigation, AlertCircle } from "lucide-react";
-import { Button } from "@/shared/ui";
+import { Button, ThemeToggle } from "@/shared/ui";
 import { FavoriteGrid } from "@/widgets/favorite-grid";
 
 interface SelectedLocation {
@@ -22,6 +22,13 @@ interface PendingSearch {
   currentIndex: number;
 }
 
+// 기본 위치: 서울 강남구
+const DEFAULT_LOCATION = {
+  latitude: 37.4979,
+  longitude: 127.0276,
+  name: "서울 강남구",
+};
+
 export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -34,10 +41,11 @@ export default function Home() {
   // 검색된 지역의 좌표 조회
   const { data: geocodeResults, isLoading: geocodeLoading, isFetched } = useGeocode(searchQuery);
 
-  // 현재 사용할 좌표 결정
-  const currentLat = selectedLocation?.latitude ?? geoLat;
-  const currentLon = selectedLocation?.longitude ?? geoLon;
-  const currentLocationName = selectedLocation?.name;
+  // 현재 사용할 좌표 결정 (위치 권한 거부시 기본 위치 사용)
+  const useDefaultLocation = !selectedLocation && geoError;
+  const currentLat = selectedLocation?.latitude ?? geoLat ?? (useDefaultLocation ? DEFAULT_LOCATION.latitude : null);
+  const currentLon = selectedLocation?.longitude ?? geoLon ?? (useDefaultLocation ? DEFAULT_LOCATION.longitude : null);
+  const currentLocationName = selectedLocation?.name ?? (useDefaultLocation ? DEFAULT_LOCATION.name : undefined);
 
   const {
     data: weather,
@@ -119,9 +127,9 @@ export default function Home() {
   const isLoading = geoLoading || weatherLoading || isSearching;
 
   // 로딩 화면 (현재 위치 모드일 때만)
-  if (isLoading && !selectedLocation) {
+  if (isLoading && !selectedLocation && !useDefaultLocation) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--background)]">
         <Loader2 className="w-10 h-10 text-[var(--muted-foreground)] animate-spin" />
         <div className="flex items-center gap-2 text-[var(--muted-foreground)]">
           <MapPin className="w-4 h-4" />
@@ -137,54 +145,40 @@ export default function Home() {
     );
   }
 
-  // 위치 권한 에러 (검색된 위치가 없을 때만)
-  if (geoError && !selectedLocation) {
-    return (
-      <main className="flex min-h-screen flex-col items-center p-4 md:p-8 gap-6">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Weather App</h1>
-
-        <div className="w-full max-w-md">
-          <LocationSearch onSelect={handleLocationSelect} placeholder="지역 검색 (예: 서울, 강남구, 역삼동)" />
-        </div>
-
-        {/* 검색 에러 메시지 */}
-        {locationError && (
-          <div className="w-full max-w-md flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-md">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-            <p className="text-sm text-red-500 flex-1">{locationError}</p>
-            <button onClick={handleCloseError} className="text-red-500 hover:text-red-400">
-              ✕
-            </button>
-          </div>
-        )}
-
-        <div className="flex flex-col items-center gap-3 p-8 text-center">
-          <MapPinOff className="w-12 h-12 text-[var(--muted-foreground)]" />
-          <p className="text-[var(--muted-foreground)]">{geoError}</p>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            위치 검색을 통해 원하는 지역의 날씨를 확인하세요.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
   // 날씨 API 에러
   if (weatherError && !isLoading) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-4 bg-[var(--background)]">
         <p className="text-lg text-red-500">날씨 정보를 불러오는데 실패했습니다.</p>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 gap-4">
-      <h1 className="text-2xl font-bold text-[var(--foreground)]">Weather App</h1>
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 gap-4 bg-[var(--background)]">
+      <div className="w-full max-w-md flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Weather App</h1>
+        <ThemeToggle />
+      </div>
 
       <div className="w-full max-w-md flex flex-col gap-4">
-        {/* 검색 바 */}
-        <LocationSearch onSelect={handleLocationSelect} placeholder="지역 검색 (예: 서울, 강남구, 역삼동)" />
+        {/* 검색 바 + 현재 위치 버튼 */}
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <LocationSearch onSelect={handleLocationSelect} placeholder="지역 검색 (예: 서울, 강남구, 역삼동)" />
+          </div>
+          {selectedLocation && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleResetToCurrentLocation}
+              title="현재 위치로"
+              className="flex-shrink-0"
+            >
+              <Navigation className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
 
         {/* 검색 에러 메시지 */}
         {locationError && (
@@ -197,32 +191,29 @@ export default function Home() {
           </div>
         )}
 
-        {/* 현재 위치로 돌아가기 버튼 */}
-        {selectedLocation && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetToCurrentLocation}
-            className="self-start"
-          >
-            <Navigation className="w-4 h-4 mr-2" />
-            현재 위치로
-          </Button>
+        {/* 기본 위치 사용 안내 */}
+        {useDefaultLocation && (
+          <div className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+            <MapPinOff className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <p className="text-sm text-blue-600">
+              위치 권한이 거부되어 기본 위치(서울 강남구)를 표시합니다.
+            </p>
+          </div>
         )}
 
-        {/* 검색 중 로딩 */}
-        {isSearching && (
-          <div className="flex items-center justify-center gap-2 py-4 text-[var(--muted-foreground)]">
+        {/* 검색 중 또는 날씨 로딩 중 */}
+        {(isSearching || (weatherLoading && (selectedLocation || useDefaultLocation))) && (
+          <div className="flex items-center justify-center gap-2 py-8 text-[var(--muted-foreground)]">
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span>지역 검색 중...</span>
+            <span>{isSearching ? "지역 검색 중..." : "날씨 정보 불러오는 중..."}</span>
           </div>
         )}
 
         {/* 날씨 정보 */}
-        {!isSearching && weather && currentLat && currentLon && (
+        {!isSearching && !weatherLoading && weather && currentLat && currentLon && (
           <WeatherCard data={weather} latitude={currentLat} longitude={currentLon} />
         )}
-        {!isSearching && hourly && <HourlyForecast data={hourly} />}
+        {!isSearching && !weatherLoading && hourly && <HourlyForecast data={hourly} />}
 
         {/* 즐겨찾기 */}
         <div className="mt-4 w-full">

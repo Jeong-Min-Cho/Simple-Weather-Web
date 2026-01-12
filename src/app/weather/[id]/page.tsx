@@ -6,7 +6,7 @@ import { useFavoritesStore } from "@/shared/model/favoritesStore";
 import { useCurrentWeather, useHourlyForecast } from "@/features/weather";
 import { WeatherCard } from "@/widgets/weather-card";
 import { HourlyForecast } from "@/widgets/hourly-forecast";
-import { Button } from "@/shared/ui";
+import { Button, ThemeToggle } from "@/shared/ui";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 interface PageProps {
@@ -33,7 +33,7 @@ export default function WeatherDetailPage({ params }: PageProps) {
 
   if (!favorite) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-4 bg-[var(--background)]">
         <p className="text-lg text-[var(--muted-foreground)]">
           즐겨찾기를 찾을 수 없습니다.
         </p>
@@ -49,7 +49,7 @@ export default function WeatherDetailPage({ params }: PageProps) {
 
   if (isLoading) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--background)]">
         <Loader2 className="w-10 h-10 text-[var(--muted-foreground)] animate-spin" />
         <p className="text-[var(--muted-foreground)]">날씨 정보 불러오는 중...</p>
       </main>
@@ -57,17 +57,19 @@ export default function WeatherDetailPage({ params }: PageProps) {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 gap-4">
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 gap-4 bg-[var(--background)]">
       <div className="w-full max-w-md">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push("/")}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          돌아가기
-        </Button>
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/")}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            돌아가기
+          </Button>
+          <ThemeToggle />
+        </div>
 
         {weather && (
           <WeatherCard
