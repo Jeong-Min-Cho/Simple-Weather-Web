@@ -1,121 +1,57 @@
 # Weather App
 
-한국 지역 기반의 날씨 정보 웹 애플리케이션입니다.
+한국 지역 날씨 정보 웹앱
 
-## 주요 기능
+## 실행 방법
 
-- **현재 위치 날씨** - GPS 기반 현재 위치의 날씨 정보 표시
-- **지역 검색** - 한국 시/군/구/동 단위 지역 검색
-- **시간대별 예보** - 24시간 동안의 시간별 날씨 예보
-- **즐겨찾기** - 자주 확인하는 지역 저장 및 관리
-  - 드래그 앤 드롭으로 순서 변경
-  - 별칭 설정 가능
-- **다크모드** - 라이트/다크 테마 전환
+```bash
+npm install
+npm run dev
+```
+
+## 기능
+
+- 현재 위치 기반 날씨 조회
+- 시/군/구/동 단위 지역 검색
+- 24시간 시간대별 예보
+- 즐겨찾기 (최대 6개, 드래그로 순서 변경, 별칭 설정)
+- 다크모드
 
 ## 기술 스택
 
-| 분류 | 기술 |
-|------|------|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript |
-| Styling | TailwindCSS v4 |
-| State Management | Zustand (클라이언트), TanStack Query v5 (서버) |
-| API | Open-Meteo (날씨), Nominatim (지오코딩) |
-| Architecture | Feature-Sliced Design (FSD) |
+- Next.js 16 + TypeScript
+- TailwindCSS v4
+- TanStack Query (서버 상태) + Zustand (클라이언트 상태)
+- Open-Meteo API (날씨) + Nominatim (지오코딩)
 
-## 설치 및 실행
+## 기술적 의사결정
 
-```bash
-# 의존성 설치
-npm install
+### Open-Meteo API 선택
+OpenWeatherMap 대신 Open-Meteo를 선택했습니다. API 키 없이 바로 사용할 수 있고, 요청 제한이 넉넉해서 개발과 테스트가 편했습니다. 시간대별 예보 데이터도 충분히 제공됩니다.
 
-# 개발 서버 실행
-npm run dev
+### Zustand + TanStack Query 조합
+서버 데이터(날씨 정보)는 TanStack Query로, 클라이언트 데이터(즐겨찾기, 테마)는 Zustand로 분리했습니다. Redux보다 보일러플레이트가 적고, Zustand의 persist 미들웨어로 localStorage 연동이 간단합니다.
 
-# 프로덕션 빌드
-npm run build
+### Next.js App Router
+React만 써도 되지만 Next.js를 선택한 이유는 파일 기반 라우팅이 편하고, 추후 SSR이나 ISR이 필요할 때 확장하기 좋아서입니다.
 
-# 프로덕션 실행
-npm start
-```
+### 로컬 JSON 검색 + Nominatim 병행
+korea_districts.json으로 빠른 자동완성을 제공하고, 실제 좌표는 Nominatim API로 가져옵니다. 로컬 데이터만으로는 좌표가 없고, API만으로는 자동완성이 느려서 둘을 조합했습니다.
 
-## 프로젝트 구조 (FSD Architecture)
+## 프로젝트 구조
 
 ```
 src/
-├── app/                    # Next.js App Router (pages, layouts)
-│   ├── page.tsx           # 메인 페이지
-│   ├── weather/[id]/      # 즐겨찾기 상세 페이지
-│   └── providers/         # Provider 컴포넌트
-├── features/              # 기능 단위 모듈
-│   ├── weather/           # 날씨 API 및 쿼리
-│   └── location-search/   # 지역 검색 기능
-├── widgets/               # 독립적인 UI 블록
-│   ├── weather-card/      # 날씨 카드
-│   ├── hourly-forecast/   # 시간별 예보
-│   └── favorite-grid/     # 즐겨찾기 그리드
-├── entities/              # 비즈니스 엔티티
-├── shared/                # 공유 리소스
-│   ├── ui/               # 공통 UI 컴포넌트
-│   ├── hooks/            # 공통 훅
-│   ├── model/            # 전역 상태 (Zustand)
-│   └── lib/              # 유틸리티
-└── views/                 # 페이지 레벨 컴포넌트
+├── app/                 # 페이지, 레이아웃
+├── features/            # 날씨 API, 지역 검색
+├── widgets/             # 날씨 카드, 시간별 예보, 즐겨찾기
+├── entities/            # 날씨 아이콘, 온도 표시
+└── shared/              # 공통 UI, 훅, 상태, 유틸
 ```
 
-## 상태 관리 흐름
+## 추가 구현
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     사용자 인터렉션                       │
-└─────────────────────────────────────────────────────────┘
-                            │
-            ┌───────────────┴───────────────┐
-            ▼                               ▼
-    ┌───────────────┐               ┌───────────────┐
-    │   Zustand     │               │ TanStack Query│
-    │ (클라이언트)   │               │   (서버)      │
-    ├───────────────┤               ├───────────────┤
-    │ • 즐겨찾기    │               │ • 날씨 데이터 │
-    │ • 테마 설정   │               │ • 지오코딩    │
-    │ • 선택된 위치 │               │ • 자동 갱신   │
-    └───────────────┘               └───────────────┘
-            │                               │
-            └───────────────┬───────────────┘
-                            ▼
-                    ┌───────────────┐
-                    │   React UI    │
-                    └───────────────┘
-```
-
-## 추가 구현 사항 (요구사항 외)
-
-| 기능 | 설명 |
-|------|------|
-| 드래그 앤 드롭 | @dnd-kit을 활용한 즐겨찾기 순서 변경 |
-| 다크모드 | 시스템 설정 연동 및 수동 전환 |
-| 자동 갱신 | 1시간마다 날씨 데이터 자동 새로고침 |
-| 기본 위치 | 위치 권한 거부 시 서울 강남구 표시 |
-| 삭제 확인 | 즐겨찾기 삭제 전 확인 모달 |
-| 커스텀 스크롤바 | 시간별 예보 영역 스크롤바 스타일링 |
-
-## API
-
-### 날씨 데이터
-- **Open-Meteo API** (무료, API 키 불필요)
-- 현재 날씨, 시간별 예보 제공
-
-### 지오코딩
-- **Nominatim API** (OpenStreetMap)
-- 한국 지역 검색용 로컬 JSON 데이터 병행 사용
-
-## 브라우저 지원
-
-- Chrome (최신)
-- Firefox (최신)
-- Safari (최신)
-- Edge (최신)
-
-## 라이선스
-
-MIT License
+- 드래그 앤 드롭 즐겨찾기 정렬 (@dnd-kit)
+- 1시간마다 날씨 자동 갱신
+- 위치 권한 거부 시 기본 위치(서울 강남구) 표시
+- 즐겨찾기 삭제 확인 모달
