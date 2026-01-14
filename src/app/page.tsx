@@ -68,38 +68,41 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)] safe-area-bottom">
+    <div className="min-h-screen bg-[var(--background)] safe-area-bottom overflow-x-hidden">
       {/* 헤더 */}
-      <header className="w-full max-w-md mx-auto p-4 md:p-8 pb-0 flex items-center justify-between">
+      <header className="w-full max-w-md lg:max-w-4xl mx-auto p-4 md:p-8 pb-0 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Weather App</h1>
         <ThemeToggle />
       </header>
 
-      <main className="w-full max-w-md mx-auto p-4 md:px-8 flex flex-col gap-4">
-        {/* 검색 영역 */}
-        <nav aria-label="지역 검색">
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <LocationSearch onSelect={handleLocationSelect} placeholder="지역 검색 (예: 서울, 강남구, 역삼동)" />
+      <main className="w-full max-w-md lg:max-w-4xl mx-auto p-4 md:px-8 flex flex-col gap-4">
+        {/* 상단: 검색 + 즐겨찾기 타이틀 */}
+        <div className="flex flex-col lg:flex-row lg:gap-8 lg:items-end">
+          <nav aria-label="지역 검색" className="w-full lg:w-[420px] lg:flex-shrink-0">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <LocationSearch onSelect={handleLocationSelect} placeholder="지역 검색 (예: 서울, 강남구, 역삼동)" />
+              </div>
+              {selectedLocation && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleResetToCurrentLocation}
+                  title="현재 위치로"
+                  aria-label="현재 위치로 돌아가기"
+                  className="flex-shrink-0"
+                >
+                  <Navigation className="w-4 h-4" />
+                </Button>
+              )}
             </div>
-            {selectedLocation && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleResetToCurrentLocation}
-                title="현재 위치로"
-                aria-label="현재 위치로 돌아가기"
-                className="flex-shrink-0"
-              >
-                <Navigation className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        </nav>
+          </nav>
+          <h2 className="hidden lg:block text-lg font-semibold">즐겨찾기</h2>
+        </div>
 
         {/* 알림 메시지 영역 */}
         {locationError && (
-          <aside role="alert" className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+          <aside role="alert" className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-md lg:w-[420px]">
             <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" aria-hidden="true" />
             <p className="text-sm text-red-500 flex-1">{locationError}</p>
             <button onClick={handleCloseError} className="text-red-500 hover:text-red-400" aria-label="닫기">
@@ -109,7 +112,7 @@ export default function Home() {
         )}
 
         {useDefaultLocation && (
-          <aside role="status" className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+          <aside role="status" className="flex items-center gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-md lg:w-[420px]">
             <MapPinOff className="w-4 h-4 text-blue-500 flex-shrink-0" aria-hidden="true" />
             <p className="text-sm text-blue-600">
               위치 권한이 거부되어 기본 위치(서울 강남구)를 표시합니다.
@@ -117,31 +120,35 @@ export default function Home() {
           </aside>
         )}
 
-        {/* 로딩 상태 */}
-        {(isSearching || (weatherLoading && (selectedLocation || useDefaultLocation))) && (
-          <div className="flex items-center justify-center gap-2 py-8 text-[var(--muted-foreground)]" role="status" aria-live="polite">
-            <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
-            <span>{isSearching ? "지역 검색 중..." : "날씨 정보 불러오는 중..."}</span>
+        {/* 2컬럼 레이아웃 (데스크탑) */}
+        <div className="flex flex-col lg:flex-row lg:gap-8 lg:items-start">
+          {/* 날씨 정보 */}
+          <div className="flex flex-col gap-4 w-full lg:w-[420px] lg:flex-shrink-0">
+            {/* 로딩 상태 */}
+            {(isSearching || (weatherLoading && (selectedLocation || useDefaultLocation))) && (
+              <div className="flex items-center gap-2 py-8 text-[var(--muted-foreground)]" role="status" aria-live="polite">
+                <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+                <span>{isSearching ? "지역 검색 중..." : "날씨 정보 불러오는 중..."}</span>
+              </div>
+            )}
+            {!isSearching && !weatherLoading && weather && currentLat && currentLon && (
+              <section aria-label="현재 날씨">
+                <WeatherCard data={weather} latitude={currentLat} longitude={currentLon} />
+              </section>
+            )}
+            {!isSearching && !weatherLoading && hourly && (
+              <section aria-label="시간대별 예보">
+                <HourlyForecast data={hourly} />
+              </section>
+            )}
           </div>
-        )}
 
-        {/* 날씨 정보 섹션 */}
-        {!isSearching && !weatherLoading && weather && currentLat && currentLon && (
-          <section aria-label="현재 날씨">
-            <WeatherCard data={weather} latitude={currentLat} longitude={currentLon} />
+          {/* 즐겨찾기 */}
+          <section className="mt-6 lg:mt-0 w-full lg:flex-1" aria-label="즐겨찾기 목록">
+            <h2 className="lg:hidden text-lg font-semibold mb-3">즐겨찾기</h2>
+            <FavoriteGrid />
           </section>
-        )}
-        {!isSearching && !weatherLoading && hourly && (
-          <section aria-label="시간대별 예보">
-            <HourlyForecast data={hourly} />
-          </section>
-        )}
-
-        {/* 즐겨찾기 섹션 */}
-        <section className="mt-4 w-full" aria-label="즐겨찾기 목록">
-          <h2 className="text-lg font-semibold mb-3">즐겨찾기</h2>
-          <FavoriteGrid />
-        </section>
+        </div>
       </main>
     </div>
   );
