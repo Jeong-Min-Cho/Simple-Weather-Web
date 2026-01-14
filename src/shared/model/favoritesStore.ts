@@ -24,7 +24,7 @@ interface FavoritesActions {
   getFavoriteByCoords: (latitude: number, longitude: number) => FavoriteLocation | undefined;
 }
 
-const MAX_FAVORITES = 6;
+export const MAX_FAVORITES = 6;
 
 export const useFavoritesStore = create<FavoritesState & FavoritesActions>()(
   persist(

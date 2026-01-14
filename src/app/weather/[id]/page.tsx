@@ -57,34 +57,39 @@ export default function WeatherDetailPage({ params }: PageProps) {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 gap-4 bg-[var(--background)]">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-between mb-4">
+    <div className="min-h-screen bg-[var(--background)] safe-area-bottom">
+      <header className="w-full max-w-md mx-auto p-4 md:p-8 pb-0 flex items-center justify-between">
+        <nav aria-label="뒤로가기">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => router.push("/")}
+            aria-label="홈으로 돌아가기"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
             돌아가기
           </Button>
-          <ThemeToggle />
-        </div>
+        </nav>
+        <ThemeToggle />
+      </header>
 
+      <main className="w-full max-w-md mx-auto p-4 md:px-8 flex flex-col gap-4">
         {weather && (
-          <WeatherCard
-            data={weather}
-            latitude={favorite.latitude}
-            longitude={favorite.longitude}
-          />
+          <section aria-label="현재 날씨">
+            <WeatherCard
+              data={weather}
+              latitude={favorite.latitude}
+              longitude={favorite.longitude}
+            />
+          </section>
         )}
 
         {hourly && (
-          <div className="mt-4">
+          <section aria-label="시간대별 예보">
             <HourlyForecast data={hourly} />
-          </div>
+          </section>
         )}
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

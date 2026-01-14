@@ -5,6 +5,7 @@ import type {
   HourlyForecast,
   WeatherCodeInfo,
 } from "../model/types";
+import { WEATHER_CONFIG } from "@/shared/config/constants";
 
 const BASE_URL = "https://api.open-meteo.com/v1";
 
@@ -298,7 +299,7 @@ function transformHourlyForecast(data: OpenMeteoResponse): HourlyForecast[] {
   const now = new Date();
   const currentHour = now.getHours();
 
-  // 현재 시간부터 24시간 (1시간 간격으로 24개)
+  // 현재 시간부터 시간대별 예보
   const forecasts: HourlyForecast[] = [];
   let startIndex = hourly.time.findIndex((time) => {
     const hour = new Date(time).getHours();
@@ -307,8 +308,8 @@ function transformHourlyForecast(data: OpenMeteoResponse): HourlyForecast[] {
 
   if (startIndex === -1) startIndex = 0;
 
-  // 1시간 간격으로 24개
-  for (let i = 0; i < 24; i++) {
+  // 1시간 간격으로 HOURLY_FORECAST_COUNT개
+  for (let i = 0; i < WEATHER_CONFIG.HOURLY_FORECAST_COUNT; i++) {
     const index = startIndex + i;
     if (index >= hourly.time.length) break;
 

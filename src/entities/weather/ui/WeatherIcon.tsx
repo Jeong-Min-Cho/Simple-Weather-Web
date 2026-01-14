@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { cn } from "@/shared/lib/cn";
 import {
   Sun,
@@ -70,7 +71,7 @@ const colorMap: Record<string, string> = {
   "50n": "text-gray-500",
 };
 
-export function WeatherIcon({
+export const WeatherIcon = memo(function WeatherIcon({
   icon,
   condition,
   size = "md",
@@ -87,8 +88,10 @@ export function WeatherIcon({
         className
       )}
       title={condition}
+      role="img"
+      aria-label={`날씨: ${condition}`}
     >
-      <IconComponent className={cn("w-full h-full", colorClass)} />
+      <IconComponent className={cn("w-full h-full", colorClass)} aria-hidden="true" />
     </div>
   );
-}
+});

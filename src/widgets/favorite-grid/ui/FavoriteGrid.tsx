@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -37,33 +37,33 @@ export function FavoriteGrid() {
     })
   );
 
-  const handleEdit = (favorite: FavoriteLocation) => {
+  const handleEdit = useCallback((favorite: FavoriteLocation) => {
     setEditingFavorite(favorite);
-  };
+  }, []);
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = useCallback((id: string) => {
     const favorite = favorites.find((f) => f.id === id);
     if (favorite) {
       setDeletingFavorite(favorite);
     }
-  };
+  }, [favorites]);
 
-  const handleDeleteConfirm = (id: string) => {
+  const handleDeleteConfirm = useCallback((id: string) => {
     removeFavorite(id);
-  };
+  }, [removeFavorite]);
 
-  const handleSaveAlias = (id: string, newAlias: string) => {
+  const handleSaveAlias = useCallback((id: string, newAlias: string) => {
     updateAlias(id, newAlias);
     setEditingFavorite(null);
-  };
+  }, [updateAlias]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
       reorderFavorites(active.id as string, over.id as string);
     }
-  };
+  }, [reorderFavorites]);
 
   if (favorites.length === 0) {
     return (
