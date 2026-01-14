@@ -213,9 +213,6 @@ export async function reverseGeocode(
     const data: NominatimResponse = await response.json();
     const address = data.address;
 
-    // 디버깅: Nominatim 응답 확인
-    console.log("Nominatim response:", JSON.stringify(address, null, 2));
-
     // 전체 주소 조합: 도/시 + 시/군/구 + 동/읍/면
     const parts: string[] = [];
 

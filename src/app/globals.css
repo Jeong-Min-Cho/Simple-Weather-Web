@@ -71,15 +71,6 @@ body {
   }
 }
 
-/* Touch-friendly tap targets */
-@media (pointer: coarse) {
-  button,
-  [role="button"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-}
-
 /* Text truncation utility */
 .truncate-2-lines {
   display: -webkit-box;
