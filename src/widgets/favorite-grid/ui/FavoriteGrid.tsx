@@ -83,7 +83,7 @@ export function FavoriteGrid() {
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={favorites.map((f) => f.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="favorite-grid">
             {favorites.map((favorite) => (
               <SortableFavoriteCard
                 key={favorite.id}
