@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { GEOLOCATION_CONFIG } from "@/shared/config/constants";
 
 interface GeolocationState {
   latitude: number | null;
@@ -17,8 +18,8 @@ interface UseGeolocationOptions {
 
 const defaultOptions: UseGeolocationOptions = {
   enableHighAccuracy: false,
-  timeout: 10000,
-  maximumAge: 60000, // 1분간 캐시
+  timeout: GEOLOCATION_CONFIG.TIMEOUT,
+  maximumAge: GEOLOCATION_CONFIG.MAX_AGE,
 };
 
 export function useGeolocation(options: UseGeolocationOptions = {}) {

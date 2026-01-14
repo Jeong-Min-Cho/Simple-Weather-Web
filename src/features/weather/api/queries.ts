@@ -6,6 +6,7 @@ import {
   reverseGeocode,
 } from "./weatherApi";
 import type { WeatherData, HourlyForecast, GeocodingResult } from "../model/types";
+import { CACHE_CONFIG, WEATHER_CONFIG } from "@/shared/config/constants";
 
 // Query Keys
 export const weatherKeys = {
@@ -22,9 +23,9 @@ export function useCurrentWeather(lat: number | null, lon: number | null, locati
     queryKey: [...weatherKeys.current(lat ?? 0, lon ?? 0), "v3"],
     queryFn: () => getCurrentWeather(lat!, lon!, locationName),
     enabled: lat !== null && lon !== null,
-    staleTime: 5 * 60 * 1000, // 5분
-    gcTime: 10 * 60 * 1000, // 10분
-    refetchInterval: 60 * 60 * 1000, // 1시간마다 자동 갱신
+    staleTime: CACHE_CONFIG.WEATHER_STALE_TIME,
+    gcTime: CACHE_CONFIG.WEATHER_GC_TIME,
+    refetchInterval: CACHE_CONFIG.WEATHER_REFETCH_INTERVAL,
   });
 }
 
@@ -34,9 +35,9 @@ export function useHourlyForecast(lat: number | null, lon: number | null) {
     queryKey: weatherKeys.hourly(lat ?? 0, lon ?? 0),
     queryFn: () => getHourlyForecast(lat!, lon!),
     enabled: lat !== null && lon !== null,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    refetchInterval: 60 * 60 * 1000, // 1시간마다 자동 갱신
+    staleTime: CACHE_CONFIG.WEATHER_STALE_TIME,
+    gcTime: CACHE_CONFIG.WEATHER_GC_TIME,
+    refetchInterval: CACHE_CONFIG.WEATHER_REFETCH_INTERVAL,
   });
 }
 
@@ -45,9 +46,9 @@ export function useGeocode(query: string) {
   return useQuery<GeocodingResult[]>({
     queryKey: weatherKeys.geocode(query),
     queryFn: () => geocodeLocation(query),
-    enabled: query.length >= 2,
-    staleTime: 30 * 60 * 1000, // 30분
-    gcTime: 60 * 60 * 1000, // 1시간
+    enabled: query.length >= WEATHER_CONFIG.MIN_SEARCH_LENGTH,
+    staleTime: CACHE_CONFIG.GEOCODE_STALE_TIME,
+    gcTime: CACHE_CONFIG.GEOCODE_GC_TIME,
   });
 }
 
@@ -57,7 +58,7 @@ export function useReverseGeocode(lat: number | null, lon: number | null) {
     queryKey: weatherKeys.reverseGeocode(lat ?? 0, lon ?? 0),
     queryFn: () => reverseGeocode(lat!, lon!),
     enabled: lat !== null && lon !== null,
-    staleTime: 60 * 60 * 1000, // 1시간
-    gcTime: 24 * 60 * 60 * 1000, // 24시간
+    staleTime: CACHE_CONFIG.REVERSE_GEOCODE_STALE_TIME,
+    gcTime: CACHE_CONFIG.REVERSE_GEOCODE_GC_TIME,
   });
 }
