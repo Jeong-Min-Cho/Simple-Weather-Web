@@ -71,10 +71,10 @@ body {
   }
 }
 
-/* Touch-friendly tap targets - 아이콘 버튼만 적용 */
+/* Touch-friendly tap targets */
 @media (pointer: coarse) {
-  button[aria-label],
-  [role="button"][aria-label] {
+  button,
+  [role="button"] {
     min-height: 44px;
     min-width: 44px;
   }
@@ -92,18 +92,5 @@ body {
 @media (max-width: 320px) {
   html {
     font-size: 14px;
-  }
-}
-
-/* Favorite grid layout */
-.favorite-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-}
-
-@media (min-width: 768px) {
-  .favorite-grid {
-    grid-template-columns: repeat(3, 1fr);
   }
 }
